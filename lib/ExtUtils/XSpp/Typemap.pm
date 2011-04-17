@@ -120,7 +120,7 @@ sub get_xs_typemap_code_for_all_typemaps {
   foreach my $typemap (@Typemaps) {
     my $xstype = $typemap->[1]->xs_type();
     if (defined $xstype) {
-      $typemaps->add_typemap(ctype => $typemap->cpp_type, xstype => $xstype);
+      $typemaps->add_typemap(ctype => $typemap->[1]->cpp_type, xstype => $xstype);
     }
   }
 

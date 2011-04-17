@@ -28,7 +28,23 @@ sub generate {
     my $success = $parser->parse;
     return() if not $success;
 
-    return $self->_emit( $parser );
+    my $generated = $self->_emit( $parser );
+
+    my $typemap_code = ExtUtils::XSpp::Typemap::get_xs_typemap_code_for_all_typemaps();
+    if (defined $typemap_code && $typemap_code =~ /\S/) {
+      if (exists $generated->{'-'} and $generated->{'-'} ne '') {
+        $generated->{'-'} = $typemap_code . $generated->{'-'};
+      }
+      elsif (my @files = grep !/^-$/, keys %$generated) {
+        $generated->{$files[0]} = $typemap_code . ($generated->{$files[0]}||'');
+      }
+      else {
+        $generated->{'-'} = $typemap_code . ($generated->{'-'}||'');
+      }
+    }
+
+
+    return $generated;
 }
 
 sub process {
@@ -41,19 +57,6 @@ sub process {
 
 sub _write {
     my( $self, $out ) = @_;
-
-    my $typemap_code = ExtUtils::XSpp::Typemap::get_xs_typemap_code_for_all_typemaps();
-    if (defined $typemap_code && $typemap_code =~ /\S/) {
-      if (exists $out->{'-'} and $out->{'-'} ne '') {
-        $out->{'-'} = $typemap_code . $out->{'-'};
-      }
-      elsif (my @files = grep !/^-$/, keys %$out) {
-        $out->{$files[0]} = $typemap_code . ($out->{$files[0]}||'');
-      }
-      else {
-        $out->{'-'} = $typemap_code . ($out->{'-'}||'');
-      }
-    }
 
     foreach my $f ( keys %$out ) {
         if( $f eq '-' ) {
