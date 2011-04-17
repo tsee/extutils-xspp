@@ -42,6 +42,19 @@ sub process {
 sub _write {
     my( $self, $out ) = @_;
 
+    my $typemap_code = ExtUtils::XSpp::Typemap::get_xs_typemap_code_for_all_typemaps();
+    if (defined $typemap_code && $typemap_code =~ /\S/) {
+      if (exists $out->{'-'} and $out->{'-'} ne '') {
+        $out->{'-'} = $typemap_code . $out->{'-'};
+      }
+      elsif (my @files = grep !/^-$/, keys %$out) {
+        $out->{$files[0]} = $typemap_code . ($out->{$files[0]}||'');
+      }
+      else {
+        $out->{'-'} = $typemap_code . ($out->{'-'}||'');
+      }
+    }
+
     foreach my $f ( keys %$out ) {
         if( $f eq '-' ) {
             if( $self->xsubpp ) {
