@@ -2,7 +2,7 @@
 
 use strict;
 use warnings;
-use t::lib::XSP::Test tests => 6;
+use t::lib::XSP::Test tests => 7;
 
 run_diff xsp_stdout => 'expected';
 
@@ -37,6 +37,42 @@ Foo::foo( foobar a, void* b )
   CODE:
     try {
       RETVAL = THIS->foo( a, b );
+    }
+    catch (std::exception& e) {
+      croak("Caught C++ exception of type or derived from 'std::exception': %s", e.what());
+    }
+    catch (...) {
+      croak("Caught C++ exception of unknown type");
+    }
+  OUTPUT: RETVAL
+
+=== Complex typemap, xs type
+--- xsp_stdout
+%module{Foo};
+
+%typemap{foobar}{parsed}{
+    %xs_type{T_IV};
+    %cpp_type{bar};
+};
+
+class Foo
+{
+    int foo( foobar b );
+};
+--- expected
+#include <exception>
+
+
+MODULE=Foo
+
+MODULE=Foo PACKAGE=Foo
+
+foobar
+Foo::foo( b )
+    bar b
+  CODE:
+    try {
+      RETVAL = THIS->foo( b );
     }
     catch (std::exception& e) {
       croak("Caught C++ exception of type or derived from 'std::exception': %s", e.what());
